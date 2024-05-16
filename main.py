@@ -7,6 +7,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow_text as text
 import numpy as np
+import os
 from tensorflow import keras
 from keras import layers
 
@@ -81,6 +82,12 @@ model = AIvanModel(1000)
 # yay numbers had the math on them
 print(model(pooled_output))
 
-# dataset = ???
+folder_array = []
+for path, folders, files in os.walk("./dataset/"):
+    for folder_name in folders:
+        print(os.listdir(f"{path}/{folder_name}"))
+        folder_array.append(f"{path}/{folder_name}")
+dataset = tf.data.TextLineDataset(folder_array)
+print(dataset)
 # model.fit(dataset, epochs=10)
-model.save(filepath = "./model.keras") # saves the model's training data and stuff like that
+#model.save(filepath = "./model.keras") # saves the model's training data and stuff like that
