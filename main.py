@@ -18,64 +18,23 @@ preprocessor = hub.KerasLayer('https://www.kaggle.com/api/v1/models/tensorflow/b
 encoder = hub.KerasLayer(
     "https://www.kaggle.com/api/v1/models/tensorflow/bert/tensorFlow2/en-cased-l-12-h-768-a-12/4/download", trainable=True)
 
+
 def bertsentence(sentences):
     return encoder(preprocessor(sentences))['pooled_output']
 
 
-# class Linear(layers.Layer):
-#     def __init__(self, units=768, input_dim=768):
-#         super().__init__()
-#         self.units = units
-#
-#     def build(self, input_shape):
-#         self.w = self.add_weight(
-#             shape=(input_shape[-1], self.units),
-#             initializer="random_normal",
-#             trainable=True,
-#         )
-#         self.b = self.add_weight(shape=(self.units,), initializer="random_normal", trainable=True)
-#
-#     def call(self, inputs):
-#         return tf.matmul(inputs, self.w) + self.b
-#
-#
-# class ActivityRegularizationLayer(layers.Layer):
-#     def __init__(self, rate=1e-2):
-#         super().__init__()
-#         self.rate = rate
-#
-#     def call(self, inputs):
-#         self.add_loss(self.rate * tf.reduce_mean(inputs))
-#         return inputs
-#
-#
-# class OuterLayer(layers.Layer):
-#     def __init__(self):
-#         super().__init__()
-#         self.activity_reg = ActivityRegularizationLayer(1e-2)
-#
-#     def call(self, inputs):
-#         return self.activity_reg(inputs)
-#
-#
-# class AIvanModel(keras.Model):
-#     def __init__(self, num_classes=3):
-#         super().__init__()
-#         self.classifier = keras.layers.Dense(num_classes)
-#
-#     def call(self, inputs):
-#         x = inputs
-#         return self.classifier(x)
-
 df = pd.read_csv("dataset.csv")
 x_train, x_test, y_train, y_test = train_test_split(df['Ciphertext'], df['Type'], test_size=0.2, random_state=42)
+x_train = bertsentence(x_train.values)
+x_test = bertsentence(x_test.values)
+y_train = tf.convert_to_tensor(y_train.values)
+y_test = tf.convert_to_tensor(y_test.values)
 model = keras.Sequential()
-model.add(layers.Dense(3, name='output'))
-model(keras.ops.ones(bertsentence(x_train.values).shape))
-
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
-print(model.summary())
-model.fit(bertsentence(x_train.values), y_train.values, epochs=100)
-
-
-#model.save(filepath = "./model.keras") # saves the model's training data and stuff like that
+model.add(layers.Dense(75, name='first', activation='relu'))
+model.add(layers.Dense(150, name='second', activation='relu'))
+model.add(layers.Dense(3, name='output', activation='softmax'))  # 3 because 3 output options (binary, base64, english)
+model(keras.ops.ones(x_train.shape))
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=25)
+print(model.predict(bertsentence(['T24gT2N0b2JlciAxNSwgMjAyMCwgSWFpbiBBcm1pdGFnZSwgTWFyc2FpIE1hcnRpbiwgWWFyYSBTaGFoaWRpLCBLaW0gS2FyZGFzaGlhbiwgUmFuZGFsbCBQYXJrLCBEYXggU2hlcGFyZCwgVHlsZXIgUGVycnksIEppbW15IEtpbW1lbCB3ZXJlIGFubm91bmNlZCBhcyBwYXJ0IG9mIHRoZSBjYXN0LiBPbiBNYXkgMywgMjAyMSwgdGhlIGNhc3QgYW5kIGNoYXJhY3RlcnMgd2VyZSBhbm5vdW5jZWQuIEFkYW0gTGV2aW5lLCBQZXJyeSBhbmQgS2FyZGFzaGlhbiBqb2luZWQgdGhlIGNhc3QgYmVjYXVzZSB0aGVpciByZXNwZWN0aXZlIGNoaWxkcmVuIHdlcmUgZmFucyBvZiB0aGUgc2hvdy4gRm9yIHRoZSByb2xlIG9mIFJ5ZGVyLCBtb3JlIHRoYW4gMSwwMDAgcGVvcGxlIGF1ZGl0aW9uZWQgYmVmb3JlIFdpbGwgQnJpc2JpbiBhIDE1LXllYXJzIG9sZCBhY3RvciBmcm9tIFNoZXJ3b29kIFBhcmssIEFsYmVydGEsIENhbmFkYSwgZ290IHRoZSByb2xlLg=='])))  # ha I have no idea what this even means
+model.save(filepath="./model.keras")  # saves the current model with training
