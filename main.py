@@ -1,4 +1,4 @@
-
+# python version 3.10
 # pip install tensorflow
 # pip install tensorflow_hub
 # pip install tensorflow_text
