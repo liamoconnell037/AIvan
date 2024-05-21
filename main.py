@@ -11,7 +11,6 @@ from tensorflow import keras
 from keras import layers
 import pandas as pd
 from sklearn.model_selection import train_test_split
-# import bert models
 
 preprocessor = hub.KerasLayer('https://www.kaggle.com/api/v1/models/tensorflow/bert/tensorFlow2/en-cased-preprocess/3/download')
 encoder = hub.KerasLayer(
